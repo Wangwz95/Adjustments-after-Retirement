@@ -2,7 +2,7 @@ global rawdatapath "E:\__Post-Retirement Behavior\RawData"
 global workingdata "E:\__Post-Retirement Behavior\Adjustments-after-Retirement\Analysis\workingdata"
 global resultspath "E:\__Post-Retirement Behavior\Adjustments-after-Retirement\Analysis\_results"
 
-**#
+**# 2011
 ***********************************************************************
 ** 2011 CHARLS: control variables                           
 ***********************************************************************
@@ -81,7 +81,7 @@ drop temp
 
 save "$workingdata\demo_2011.dta", replace
 
-**#
+**# 2013
 ***********************************************************************
 ** 2013 CHARLS: control variables                            
 ***********************************************************************
@@ -155,7 +155,7 @@ label variable year "Survey year"
 
 save "$workingdata\demo_2013.dta", replace
 
-**#
+**# 2015
 ***********************************************************************
 ** 2015 CHARLS: control variables                            
 ***********************************************************************
@@ -212,7 +212,7 @@ label variable year "Survey year"
 
 save "$workingdata\demo_2015.dta", replace
 
-**#
+**# 2018
 ***********************************************************************
 ** 2018 CHARLS: control variables                            
 ********************************8***************************************
@@ -285,7 +285,7 @@ label variable year "Survey year"
 
 save "$workingdata\demo_2018.dta", replace
 
-**#
+**# Append
 ***********************************************************************
 ** Append the four waves and impute the missing values                          
 ***********************************************************************
