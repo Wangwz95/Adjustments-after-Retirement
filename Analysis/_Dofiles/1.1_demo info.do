@@ -24,12 +24,13 @@ label variable male "=1, if the ind is a male"
 drop rgender
 
 rename (ba002_1 ba002_2) (yob mob)
-generate age       = 2011 - yob,   after(mob)
-generate age_month = age*12 + mob, after(age)
+generate age       = 2011 - yob,     after(mob)
+generate age_month = age * 12 + mob, after(age)
 label variable age "survey year - year of birth"
-label variable age_month "Age*12 + mob"
+label variable age_month "Age * 12 + mob"
 drop ba003 ba001
 
+/*
 generate notsamecity = (inrange(bb001, 3, 5)) if inrange(bb001, 1, 5)
 label variable notsamecity "=1, if the ind's birthplace and residence are not in the same city"
 drop bb001
@@ -40,6 +41,7 @@ replace  notsamecity_hukou = 1 if bc005==1 & notsamecity==1
 replace  notsamecity_hukou = 0 if (inrange(bc005,1,5) | notsamecity!=.) & notsamecity_hukou!=1
 label variable notsamecity_hukou "=1, if the ind's hukou place and residence are not in the same city"
 drop bc005
+*/
 
 rename bc001 hukou
 replace hukou = . if !inrange(hukou,1 , 4)
@@ -61,7 +63,7 @@ label define educ ///
 numlabel educ, add
 label values educ educ
 
-replace marriage = 7 if marriage==.
+replace marriage = 7 if !inrange(marriage, 1, 6)
 label define marriage ///
 	1 "Married with spouse present" 2 "Married but not living with spouse temporarily" ///
     3 "Separated" 4 "Divorced" 5 "Widowed" 6 "Never married" 7 "Missing"
@@ -106,9 +108,9 @@ replace ba002_1 = zba002_1 if ba002_1==. & zba002_1!=.
 replace ba002_2 = zba002_2 if ba002_2==. & zba002_2!=.
 rename (ba002_1 ba002_2) (yob mob)
 generate age       = 2013 - yob,   after(mob)
-generate age_month = age*12 + mob, after(age)
+generate age_month = age * 12 + mob, after(age)
 label variable age "survey year - year of birth"
-label variable age_month "Age*12 + mob"
+label variable age_month "Age * 12 + mob"
 drop zba002_1 zba002_2
 
 replace bc001 = zbc001 if bc001==. & zbc001!=.
@@ -160,7 +162,7 @@ save "$workingdata\demo_2013.dta", replace
 ** 2015 CHARLS: control variables                            
 ***********************************************************************
 use "$rawdatapath\2015\Demographic_Background.dta", clear
-keep ID householdID communityID ba000_w2_3 ba004_w3_1 ba004_w3_2 ba004_w3_3 ba002_1 ba002_2 bc001_w3_2 bc002_w3_1 bc001_w3_3 bd001_w2_4 bd011 be001 xrtype
+keep ID householdID communityID ba000_w2_3 ba004_w3_1 ba004_w3_2 ba004_w3_3 ba002_1 ba002_2 bc001_w3_2 bc002_w3_1 bd001_w2_4 be001 xrtype
 order communityID ID householdID
 
 rename (ID householdID) (id hhid)
@@ -176,28 +178,36 @@ generate male = (ba000_w2_3 ==1) if (inrange(ba000_w2_3,1,2)), after(ba000_w2_3)
 label variable male "=1, if the ind is a male"
 drop ba000_w2_3
 
-replace ba002_1 = ba004_w3_1 if ba002_1==. & ba004_w3_1!=.
-replace ba002_2 = ba004_w3_2 if ba002_2==. & ba004_w3_2!=.
-rename (ba002_1 ba002_2) (yob mob)
+replace ba004_w3_1 = ba002_1 if ba002_1!=. & ba004_w3_1==.
+replace ba004_w3_2 = ba002_2 if ba002_2!=. & ba004_w3_2==.
+rename (ba004_w3_1 ba004_w3_2) (yob mob)
 generate age       = 2015 - yob,   after(mob)
-generate age_month = age*12 + mob, after(age)
+generate age_month = age * 12 + mob, after(age)
 label variable age "survey year - year of birth"
-label variable age_month "Age*12 + mob"
-drop ba004_w3_1 ba004_w3_2 ba004_w3_3
+label variable age_month "Age * 12 + mob"
+drop ba002_1 ba002_2 ba004_w3_3
 
 replace bc002_w3_1 = bc001_w3_2 if bc002_w3_1==. & bc001_w3_2!=.
+drop bc001_w3_2
 merge 1:1 id using "$workingdata\demo_2013.dta", keepusing(hukou) keep(master match) nogenerate
 replace bc002_w3_1 = hukou if bc002_w3_1==. & hukou!=.
 drop hukou
+merge 1:1 id using "$workingdata\demo_2011.dta", keepusing(hukou) keep(master match) nogenerate
+replace bc002_w3_1 = hukou if bc002_w3_1==. & hukou!=.
+drop hukou
 rename bc002_w3_1 hukou
-replace hukou = . if !inrange(hukou,1 , 4)
+replace hukou = 5 if !inrange(hukou, 1, 4)
+label values hukou hukou
 
+recode bd001_w2_4 (9/11 = 8)
 merge 1:1 id using "$workingdata\demo_2013.dta", keepusing(educ) keep(master match) nogenerate
 replace bd001_w2_4 = educ if (bd001_w2_4==12 | bd001_w2_4==.) & inrange(educ, 1, 8)
 drop educ
+merge 1:1 id using "$workingdata\demo_2011.dta", keepusing(educ) keep(master match) nogenerate
+replace bd001_w2_4 = educ if (bd001_w2_4==12 | bd001_w2_4==.) & inrange(educ, 1, 8)
+drop educ
 rename bd001_w2_4 educ
-recode educ (9/11 = 8)
-replace educ = 9 if educ==.
+replace educ = 9 if !inrange(educ, 1, 8)
 label values educ educ
 
 rename be001 marriage
@@ -233,13 +243,13 @@ generate male = (ba000_w2_3 ==1) if (inrange(ba000_w2_3,1,2)), after(ba000_w2_3)
 label variable male "=1, if the ind is a male"
 drop ba000_w2_3
 
-replace ba002_1 = ba004_w3_1 if ba002_1==. & ba004_w3_1 !=.
-replace ba002_2 = ba004_w3_2 if ba002_2==. & ba004_w3_2 !=.
-rename (ba002_1 ba002_2) (yob mob)
+replace ba004_w3_1 = ba002_1 if ba002_1!=. & ba004_w3_1==.
+replace ba004_w3_2 = ba002_2 if ba002_2!=. & ba004_w3_2==.
+rename (ba004_w3_1 ba004_w3_2) (yob mob)
 generate age       = 2018 - yob,   after(mob)
-generate age_month = age*12 + mob, after(age)
+generate age_month = age * 12 + mob, after(age)
 label variable age "survey year - year of birth"
-label variable age_month "Age*12 + mob"
+label variable age_month "Age * 12 + mob"
 
 replace bc002_w3_1 = bc001_w3_2 if bc002_w3_1==. & bc001_w3_2!=.
 replace bc002_w3_1 = zbc004 if bc002_w3_1==. & zbc004!=.
@@ -294,6 +304,13 @@ append using "$workingdata\demo_2013.dta"
 append using "$workingdata\demo_2015.dta"
 append using "$workingdata\demo_2018.dta"
 
+sort id year
+generate temp = 1
+bysort id: egen no_wave = total(temp)
+drop temp
+label variable no_wave "Number of waves the ind shown in the dataset"
+
+* minority & communist
 sort id minority
 bysort id: generate temp = minority[1]
 replace minority = temp if minority==. & temp!=.
@@ -307,43 +324,65 @@ label define missing 2 "Missing"
 label values minority missing
 label values communist missing
 
-sort id year
-bysort id: generate temp1 = educ[1]
-bysort id: generate temp2 = educ[_N]
-order temp*, after(educ)
-replace educ = temp1 if (educ==12 | educ==9) & (temp1!=12 & temp1!=9)
-replace educ = temp2 if (educ==12 | educ==9) & (temp2!=12 & temp2!=9)
-drop temp*
-replace educ = 9 if educ==12
-
+* male
 sort id male
 bysort id: generate temp = male[1]
 replace male = temp if male==. & temp!=.
 drop temp*
 
-replace yob = . if !inrange(yob, 1900, 2018)
-replace mob = . if !inrange(mob, 0, 12)
-bysort id: generate temp1 = yob[1]
-bysort id: generate temp2 = yob[_N]
-bysort id: generate temp3 = mob[1]
-bysort id: generate temp4 = mob[_N]
-replace yob = temp1 if (yob>1995 | yob==.) & (temp1!=. & temp1<=1995)
-replace yob = temp2 if (yob>1995 | yob==.) & (temp2!=. & temp2<=1995)
-replace mob = temp3 if (mob==.) & (temp3!=.)
-replace mob = temp4 if (mob==.) & (temp3!=.)
-replace age = year - yob
-replace age_month = age*12 + mob
+* educ
+sort id year
+bysort id: generate temp1 = educ[1]
+bysort id: generate temp2 = educ[2] if no_wave>=2
+bysort id: generate temp3 = educ[3] if no_wave>=3
+bysort id: generate temp4 = educ[4] if no_wave>=4
+order temp*, after(educ)
+replace educ = temp1 if (educ==9) & (temp1!=9)
+replace educ = temp2 if (educ==9) & (temp2!=9)
+replace educ = temp3 if (educ==9) & (temp3!=9)
+replace educ = temp3 if (educ==9) & (temp4!=9)
 drop temp*
+replace educ = 9 if !inrange(educ, 1, 8)
 
+* hukou
+sort id year
 bysort id: generate temp1 = hukou[1]
-bysort id: generate temp2 = hukou[_N]
-replace hukou = temp1 if hukou==. & temp1!=.
-replace hukou = temp2 if hukou==. & temp2!=.
+bysort id: generate temp2 = hukou[2] if no_wave>=2
+bysort id: generate temp3 = hukou[3] if no_wave>=3
+bysort id: generate temp4 = hukou[4] if no_wave>=4
+order temp*, after(hukou)
+replace hukou = temp1 if (hukou==5) & (temp1!=5)
+replace hukou = temp2 if (hukou==5) & (temp2!=5)
+replace hukou = temp3 if (hukou==5) & (temp3!=5)
+replace hukou = temp3 if (hukou==5) & (temp4!=5)
 drop temp*
-replace hukou = 5 if hukou==.
+replace hukou = 5 if !inrange(hukou, 1, 4)
+
+* yob
+sort id year
+bysort id: generate temp1 = yob[1]
+bysort id: generate temp2 = yob[2] if no_wave>=2
+bysort id: generate temp3 = yob[3] if no_wave>=3
+bysort id: generate temp4 = yob[4] if no_wave>=4
+order temp*, after(yob)
+
+replace yob = temp1 if (yob>=.) & (temp1!=.)
+replace yob = temp2 if (yob>=.) & (temp2!=.)
+replace yob = temp3 if (yob>=.) & (temp3!=.)
+replace yob = temp4 if (yob>=.) & (temp4!=.)
+
+bysort id: egen temp =  mode(yob)
+order temp, after(yob)
+generate error = yob - temp, after(temp)
+replace  yob = temp if !inrange(error, -5, 5) & temp<.
+drop error
+
+replace age = year - yob
+replace age_month = age * 12 + mob
+drop temp*
 
 merge m:1 communityID using "$rawdatapath\2011\PSU.dta", ///
-	keepusing(province city urban_nbs) keep(master match) nogenerate
+	keepusing(province city urban_nbs) nogenerate
 order province city urban_nbs
 sort id year
 save "$workingdata\_demo.dta", replace

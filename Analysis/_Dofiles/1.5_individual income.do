@@ -207,4 +207,4 @@ sort id year
 egen ind_inc = rowtotal(wage_amount program_amount) if wage_amount!=. & program_amount!=.
 label variable ind_inc "Total amount of individual income (wage + program), 0 is included"
 
-save "$workingdata\individual income.dta", replace
+save "$workingdata\_individual income.dta", replace
