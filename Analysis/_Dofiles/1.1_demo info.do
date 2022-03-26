@@ -377,6 +377,8 @@ generate error = yob - temp, after(temp)
 replace  yob = temp if !inrange(error, -5, 5) & temp<.
 drop error
 
+merge 1:1 id year using "$rawdatapath\H_CHARLS_demo_long.dta"
+
 replace age = year - yob
 replace age_month = age * 12 + mob
 drop temp*
